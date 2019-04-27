@@ -5,4 +5,5 @@ language : C++
 IDE : Microsoft Visual studio 2017
 
 ## Work to be done
-BFS algorithm, A*Algorithm
+-BFS algorithm
+-A*Algorithm
