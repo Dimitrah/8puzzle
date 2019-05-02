@@ -6,6 +6,8 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <chrono>
+#include <queue>
 
 #define f(x,n) for(int x=0;x<=n;x++) 
 
@@ -41,20 +43,23 @@ public:
 	bool goLeft(State&n);
 
 	vector <State> expand();
-	
+	State operator= (State o);
 };
 
 
 bool InSet(set<State> closed, State s);
 
 //Depth First Search Algorithm
-bool DFS(stack<State> &agenta, set<State> &closed, State &final, State &solution);
+bool DFS(stack<State> &frontier, set<State> &closed);
+//Breadth First Search Algorithm
+bool BFS(queue<State>&frontier, set<State>& closed);
 
 
 
 
 int main()
 {
+	auto start = chrono::steady_clock::now();
 	State final, initial;
 	f(i, 8)
 	{
@@ -76,15 +81,28 @@ int main()
 	cout << "This is the initial state.\n";
 	initial.print();
 
-	stack<State> agenta;
+
+	//-------DFS-------//
+	/*stack<State> frontier;
 	set<State> closed;
-
-	agenta.push(initial);
-	cout << "The size of agenta is " << agenta.size() << endl;
-	State solution;
-	if (DFS(agenta, closed, final, solution)) cout << "ok"<<endl;
+    frontier.push(initial);
+	cout << "The size of agenta is " << frontier.size() << endl;
+	if (DFS(frontier, closed) cout << "ok"<<endl;
+	else cout << "not ok" << endl;*/
+	
+	//-------BFS-------//
+	queue<State> frontier;
+	set<State> closed;
+	frontier.push(initial);
+	cout << "The size of agenta is " << frontier.size() << endl;
+	if (BFS(frontier, closed)) cout << "ok" << endl;
 	else cout << "not ok" << endl;
-
+	
+	
+	
+	auto end = chrono::steady_clock::now();
+	auto diff = end - start;
+	cout << chrono::duration <double, milli>(diff).count() << " ms" << endl;
 	
 
 	
@@ -217,6 +235,12 @@ vector<State> State::expand()
 	return children;
 }
 
+State State::operator=(State o)
+{
+	f(i, 8) { state[i] = o.state[i]; }
+	return *this;
+}
+
 bool operator<(const State & a, const State & o)
 {
 
@@ -229,17 +253,16 @@ bool InSet(set<State> closed, State s)
 	else return true;
 }
 
-bool DFS(stack<State>& agenta, set<State>& closed, State & final, State & solution)
+bool DFS(stack<State>& frontier, set<State>& closed)
 {
 	State s;
-	if (agenta.empty()) return false;
-	s = agenta.top();
-	agenta.pop();
+	if (frontier.empty()) return false;
+	s = frontier.top();
+	frontier.pop();
 	
 	if (s.goal())
 	{
 		cout << "SUCCESS" << endl;
-		solution = s;
 		return true;
 	}
 	
@@ -249,8 +272,32 @@ bool DFS(stack<State>& agenta, set<State>& closed, State & final, State & soluti
 		children = s.expand();
 		closed.insert(s);
 		for (unsigned int i = 0; i < children.size(); i++)
-			agenta.push(children.at(i));
+			frontier.push(children.at(i));
+
 	}
 	
-	return(DFS(agenta, closed, final, solution));
+	return(DFS(frontier, closed));
 }
+
+bool BFS(queue<State>& frontier, set<State>& closed)
+{
+	State s;
+	if (frontier.empty()) return false;
+	s = frontier.front();
+	frontier.pop();
+	if (s.goal())
+	{
+		cout << "BFS: SUCCESS!" << endl;
+		return true;
+	}
+	if (!InSet(closed, s))
+	{
+		vector<State> children;
+		children = s.expand();
+		closed.insert(s);
+		for (unsigned int i = 0; i < children.size(); i++)
+			frontier.push(children.at(i));
+	}
+	return BFS(frontier, closed);
+}
+
